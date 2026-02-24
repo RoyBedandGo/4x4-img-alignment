@@ -1,7 +1,6 @@
 import streamlit as st
 from PIL import Image, ImageOps
 import io
-import base64
 
 # High-Resolution A4 Canvas (300 DPI)
 A4_WIDTH = 2480
@@ -43,7 +42,7 @@ def process_images(uploaded_files):
             col = idx % cols
             row = idx // cols
             
-            # Resize image to fit cell (80px padding ensures they don't touch edges on print)
+            # Resize image to fit cell with LANCZOS for high quality
             img_resized = ImageOps.contain(img, (cell_width - 80, cell_height - 80), Image.Resampling.LANCZOS)
             
             # Calculate (x, y) to center the image perfectly in its cell
@@ -53,25 +52,38 @@ def process_images(uploaded_files):
             # Paste the high-quality image onto the canvas
             canvas.paste(img_resized, (x_offset, y_offset))
             
+        # Explicitly tag the canvas with 300 DPI metadata
+        canvas.info['dpi'] = (300, 300)
         pages.append(canvas)
         
     return pages
 
 # --- Streamlit UI ---
-st.set_page_config(page_title="BNG-RIAA", layout="centered")
+st.set_page_config(page_title="BNG-RRG", layout="centered")
 
-st.title("📄 BNG Reimbursement Ready")
-st.write("Upload your photos to generate Reimbursement-Ready where you can print it directly")
+st.title("📄BNG Reimbursement-Ready")
+st.write("Upload the photos to generate a perfectly 4x4 grid, ready for printing and reimbursement submission.")
 
 uploaded_files = st.file_uploader("Upload Photos (JPG/PNG)", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
 if uploaded_files:
-    if st.button("Generate & Prepare for Printing"):
-        with st.spinner("Processing your high-res images..."):
+    if st.button("Generate High-Quality PDF"):
+        with st.spinner("Processing your high-res images. This might take a moment..."):
             pages = process_images(uploaded_files)
             
             st.success(f"Successfully generated {len(pages)} high-quality page(s)!")
             
+            # --- SCROLLABLE PREVIEW SECTION ---
+            st.subheader("Preview:")
+            
+            # This creates a box 600 pixels high. If the images take up more space, 
+            # Streamlit automatically adds a vertical scrollbar!
+            with st.container(height=600):
+                for idx, page in enumerate(pages):
+                    st.image(page, caption=f"Page {idx + 1}", use_container_width=True)
+            
+            st.write("---")
+                
             # Convert to PDF
             pdf_bytes = io.BytesIO()
             pages[0].save(
@@ -81,22 +93,14 @@ if uploaded_files:
                 save_all=True, 
                 append_images=pages[1:]
             )
+            pdf_bytes.seek(0)
             
-            # Display PDF directly in the app for instant printing
-            st.subheader("🖨️ Ready to Print")
-            st.write("Hover over the PDF below and click the **Printer icon** in the top right corner.")
+            # st.info("💡 **Printing Tip:** Once downloaded, open this PDF in Chrome, Edge, or Adobe Acrobat to print. Avoid opening it in Microsoft Word.")
             
-            base64_pdf = base64.b64encode(pdf_bytes.getvalue()).decode('utf-8')
-            # Embedding the PDF using an HTML iframe
-            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}#toolbar=1" width="100%" height="800px" type="application/pdf"></iframe>'
-            st.markdown(pdf_display, unsafe_allow_html=True)
-            
-            st.markdown("---")
-            
-            # Keep the download button as a backup option
+            # Safe download button
             st.download_button(
-                label="📥 Or Download as PDF File",
-                data=pdf_bytes.getvalue(),
+                label="📥 Download Ready-to-Print PDF",
+                data=pdf_bytes,
                 file_name="high_res_a4_photos.pdf",
                 mime="application/pdf"
             )
