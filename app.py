@@ -25,11 +25,11 @@ def process_images(uploaded_files):
         # Grid layout logic
         if len(chunk) == 1:
             cols, rows = 1, 1 
-        elif len(chunk) <= 3:
+        elif len(chunk) <= 4:
             cols, rows = 2, 2 
         else:
             # 4 columns, 2 rows
-            cols, rows = 4, 2 
+            cols, rows = 2, 2 
             
         # Calculate maximum pixel size for each grid cell
         cell_width = A4_WIDTH // cols
