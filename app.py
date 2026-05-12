@@ -17,19 +17,13 @@ def process_images(uploaded_files):
     num_images = len(images)
     pages = []
     
-    # Process 8 images at a time (Max per page)
-    chunk_size = 8
+    # Process 4 images at a time (Max per page for a 2x2 grid)
+    chunk_size = 4
     for i in range(0, num_images, chunk_size):
         chunk = images[i:i + chunk_size]
         
-        # Grid layout logic
-        if len(chunk) == 1:
-            cols, rows = 1, 1 
-        elif len(chunk) <= 4:
-            cols, rows = 2, 2 
-        else:
-            # 4 columns, 2 rows
-            cols, rows = 4, 2 
+        # Grid layout logic: strictly 2 columns and 2 rows no matter what
+        cols, rows = 2, 2 
             
         # Calculate maximum pixel size for each grid cell
         cell_width = A4_WIDTH // cols
@@ -62,7 +56,7 @@ def process_images(uploaded_files):
 st.set_page_config(page_title="BNG-RRG", layout="centered")
 
 st.title("📄BNG Reimbursement-Ready")
-st.write("Upload the photos to generate a perfectly 4x4 grid, ready for printing and reimbursement submission.")
+st.write("Upload the photos to generate a perfectly 2x2 grid, ready for printing and reimbursement submission.")
 
 uploaded_files = st.file_uploader("Upload Photos (JPG/PNG)", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
@@ -94,8 +88,6 @@ if uploaded_files:
                 append_images=pages[1:]
             )
             pdf_bytes.seek(0)
-            
-            # st.info("💡 **Printing Tip:** Once downloaded, open this PDF in Chrome, Edge, or Adobe Acrobat to print. Avoid opening it in Microsoft Word.")
             
             # Safe download button
             st.download_button(
