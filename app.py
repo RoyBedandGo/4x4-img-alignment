@@ -29,7 +29,7 @@ def process_images(uploaded_files):
             cols, rows = 2, 2 
         else:
             # 4 columns, 2 rows
-            cols, rows = 2, 2 
+            cols, rows = 4, 2 
             
         # Calculate maximum pixel size for each grid cell
         cell_width = A4_WIDTH // cols
